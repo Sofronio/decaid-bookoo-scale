@@ -20,9 +20,9 @@ const COMMAND_CHARACTERISTIC = "0000ff12-0000-1000-8000-00805f9b34fb";
 
 const commands = {
   tare: [0x03, 0x0a, 0x01, 0x00, 0x00, 0x08],
-  startTimer: [0x03, 0x0a, 0x04, 0x00, 0x00, 0x0d],
-  stopTimer: [0x03, 0x0a, 0x05, 0x00, 0x00, 0x0c],
-  resetTimer: [0x03, 0x0a, 0x06, 0x00, 0x00, 0x0f]
+  flowMode: [0x03, 0x0a, 0x0c, 0x01, 0x01, 0x05],
+  tareStart: [0x03, 0x0a, 0x07, 0x00, 0x00, 0x0e],
+  stopTimer: [0x03, 0x0a, 0x05, 0x00, 0x00, 0x0c]
 };
 
 function loadPlugin() {
@@ -184,23 +184,25 @@ test("retains the last valid battery when a frame reports no percentage", async 
   driver.disconnect();
 });
 
-test("commands are the official six-byte frames", async () => {
+test("a shot prepares with a tare, enters flow mode, then tares and starts", async () => {
   const { driver, session } = setup();
   const connecting = driver.connect(session);
   await session.emit(measurement({ weight: 1 }));
   await connecting;
   session.writes.length = 0;
 
-  await driver.tare();
-  await driver.startTimer();
-  await driver.stopTimer();
-  await driver.resetTimer();
+  await driver.tare();       // preparingForShot tare
+  await driver.resetTimer(); // arms the shot, sends no frame
+  await driver.tare();       // pour tare: 07 covers it, so skipped
+  await driver.startTimer(); // flow mode, then tare+start
+  await driver.stopTimer();  // stopping
+  await driver.resetTimer(); // next preparing, sends no frame
 
   assert.deepEqual(session.writes, [
     commands.tare,
-    commands.startTimer,
-    commands.stopTimer,
-    commands.resetTimer
+    commands.flowMode,
+    commands.tareStart,
+    commands.stopTimer
   ]);
   driver.disconnect();
 });

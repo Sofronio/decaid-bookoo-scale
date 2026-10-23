@@ -51,6 +51,7 @@ function createPlugin(host) {
       return host.devices.bindDriver("bookoo-scale", {
         create() {
           let active = null;
+          let preparing = false;
 
           function stop(state) {
             if (!state || state.stopped) return;
@@ -58,12 +59,12 @@ function createPlugin(host) {
             clearTimeout(state.timer);
           }
 
-          function command(opcode) {
+          function command(opcode, data1 = 0, data2 = 0) {
             const state = active;
             if (!state || state.stopped) {
               return Promise.reject(new Error("Bookoo session is not connected"));
             }
-            const bytes = [0x03, 0x0a, opcode, 0x00, 0x00];
+            const bytes = [0x03, 0x0a, opcode, data1, data2];
             bytes.push(bytes.reduce((checksum, byte) => checksum ^ byte, 0));
             // FF12 acknowledges commands; writeWithResponse is the path the
             // reference client and the native driver both use.
@@ -87,6 +88,7 @@ function createPlugin(host) {
             async connect(session) {
               const state = {session, stopped: false, timer: null};
               active = state;
+              preparing = false;
               let battery = null;
               let ready;
               let failed;
@@ -146,12 +148,32 @@ function createPlugin(host) {
               }
             },
             disconnect() {
+              preparing = false;
               stop(active);
             },
-            tare() { return command(0x01); },
-            startTimer() { return command(0x04); },
-            stopTimer() { return command(0x05); },
-            resetTimer() { return command(0x06); }
+            tare() {
+              // The shot sequencer calls tare() again right before
+              // startTimer(); 07 already tares, so skip the duplicate.
+              if (preparing) return Promise.resolve();
+              return command(0x01);
+            },
+            startTimer() {
+              preparing = false;
+              // Enter flow mode, then tare and start in one frame. This is
+              // the sequence the Bookoo N app uses for a flow-mode shot.
+              return command(0x0c, 0x01, 0x01).then(() => command(0x07));
+            },
+            stopTimer() {
+              preparing = false;
+              return command(0x05);
+            },
+            resetTimer() {
+              // Called at preparingForShot. 07 in startTimer() handles the
+              // tare/start, so only arm the duplicate-tare skip; do not send
+              // the old 06 reset frame.
+              preparing = true;
+              return Promise.resolve();
+            }
           };
         }
       });

@@ -87,7 +87,7 @@ void main() {
     await scale.disconnect();
   });
 
-  test('maps tare and timer controls to the official frames', () async {
+  test('maps tare and timer controls to the flow-mode shot frames', () async {
     final manager = PluginManager(kvStore: FakeKeyValueStoreService());
     final controller = ScaleController();
     addTearDown(() async {
