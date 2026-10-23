@@ -1,0 +1,24 @@
+{
+  "id": "bookoo-scale.reaplugin",
+  "name": "Bookoo Scale",
+  "author": "Decaid contributors",
+  "description": "Bookoo Mini and Ultra scales with timer, flow, and battery telemetry.",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "permissions": ["transport.ble"],
+  "drivers": [{
+    "id": "bookoo-scale",
+    "type": "scale",
+    "capabilities": [
+      "battery",
+      "flow",
+      "timerTelemetry",
+      "tare",
+      "timerControl",
+      "disconnectToSleep"
+    ],
+    "ble": {"match": {"name": {"contains": "bookoo"}, "serviceUuids": ["0ffe"]}}
+  }],
+  "settings": {},
+  "api": []
+}
