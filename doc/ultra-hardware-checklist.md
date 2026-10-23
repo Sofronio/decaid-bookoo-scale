@@ -28,8 +28,7 @@ currently treats the value as grams.
 
 ## Extraction
 
-Start a shot and capture the FF12 writes (nRF Connect, a second BLE sniffer, or
-Decaid's logs):
+Start a shot and inspect the FF12 writes (nRF Connect or Decaid's logs):
 
 - [ ] At `preparingForShot`: `03 0A 06 00 00 0F` (reset timer).
 - [ ] At preinfusion/pouring: `03 0A 01 00 00 08` (tare) and

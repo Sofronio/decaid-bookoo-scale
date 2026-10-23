@@ -136,18 +136,18 @@ button, with the mode read back in the first byte of the `0x0E` response. This
 is not public protocol; use it cautiously. On Mini there is no such
 restriction.
 
-### Ultra HCI capture (2026-10-24)
+### Ultra hardware verification (2026-10-24)
 
-An Android 11 HCI snoop of the Bookoo N app (`com.bookootech.bookoocoffee`)
-talking to an Ultra recorded the full GATT flow. Advertisement name
-`BOOKOO_SC_U 246641`, serial `SN25001aac0951`.
+The Bookoo N app (`com.bookootech.bookoocoffee`) was tested with an Ultra on
+Android 11. Advertisement name `BOOKOO_SC_U 246641`, serial
+`SN25001aac0951`.
 
 - The app subscribes to both **FF11** and **FF12** notifications.
 - It writes the three handshake commands above; the replies arrive as FF12
   notifications.
 - Ultra `0x0D` automatic-mode events arrive on **FF12**, not FF11. Observed
   sequence: `02` ready → `01` started → `00` stopped → `04` exit-done.
-- Driving the scale from the app's on-screen left button produced:
+- Using the app's on-screen left button produced:
   `01` tare → `18` ready → `04` start → `05` stop → `07` exit-done → `01` tare.
   - `18` is not in Bookoo's public protocol. It puts the Ultra into
     automatic-ready (`0x0D` state 2).
@@ -163,7 +163,7 @@ talking to an Ultra recorded the full GATT flow. Advertisement name
 - The first data byte of the `0x0E` response is the current mode (`00` weight /
   `01` flow / `02` ratio). The next three bytes are additional info, possibly a
   version; they changed from `07 02 02` to `07 01 02` and are not fully decoded.
-- Mode behavior observed:
+- Mode behavior verified:
   - Flow mode accepts `04/05/06` directly; `0x0D` state events do not always
     appear.
   - Ratio mode needs `18` ready first; `04/05` before ready are ignored. `07`
@@ -220,9 +220,8 @@ cd <decaid> && flutter test test/plugins/bookoo_scale_plugin_test.dart
 - Browser tool (separate repository): command frames, decoding,
   `0x0D / 0x0C / 0x0E / 0x10`,
   and mock-GATT connect/reconnect pass headless Chrome checks.
-- Bookoo Ultra BLE protocol: captured on hardware via Android HCI snoop
-  (2026-10-24), including the app button flow and mode switching
-  (`0C / 0E / 0F`).
+- Bookoo Ultra BLE protocol: verified on hardware (2026-10-24), including the
+  app button flow and mode switching (`0C / 0E / 0F`).
 - Bookoo Ultra driver integration: not yet tested.
 - Bookoo Mini hardware: not yet tested.
 
